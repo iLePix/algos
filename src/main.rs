@@ -2,7 +2,7 @@ use sdl2::pixels::Color;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::rect::{Point, Rect};
-use vecm::vec::Vec2u;
+use vecm::vec::{Vec2i, Vec2u};
 use std::time::Duration;
 
 mod world; 
@@ -25,7 +25,8 @@ fn main() -> Result<(), String> {
     let world_size = Vec2u::new(80, 50);
     let tile_size = 20; 
     let mut mouse_pos = Vec2u::zero();
-    let screen_size = Vec2u::new(1600, 1000);    
+    let screen_size = Vec2u::new(1600, 1000);
+    let mut camera = Camera::new();
 
     canvas.set_draw_color(Color::RGB(0, 255, 255));
     canvas.clear();
@@ -36,24 +37,38 @@ fn main() -> Result<(), String> {
     let mut world = World::new(world_size);
     world.p();
 
-
     'running: loop {
-        i = (i + 1) % 80;
         //canvas.set_draw_color(Color::RGB(0, 0, 0));
 
         
 
         for x in 0..world.size.x {
             for y in 0..world.size.y {
+                let mut tile = world.get_tile(Vec2u::new(x, y));
                 if mouse_pos.x >= (x*tile_size) && mouse_pos.x < (x*tile_size + tile_size) && mouse_pos.y >= (y*tile_size) && mouse_pos.y < (y*tile_size + tile_size){ 
-                    canvas.set_draw_color(Color::RGB(255 , 0, 0));
-                } else if world.get_tile(Vec2u::new(x, y)) == Tile::Land {
-                    canvas.set_draw_color(Color::RGB(0, 128, 0));
-                } else if world.get_tile(Vec2u::new(x, y)) == Tile::Water {
-                    canvas.set_draw_color(Color::RGB(0, 0, 128));
+                    
+                    if tile.selected != 255 {
+                        tile.selected += 17;
+                    }
+                } else if tile.selected > 0 {
+                    tile.selected -= 17;
                 }
-                
+                world.set_tile(Vec2u::new(x, y), tile);
+
+                if tile.kind == TileType::Land {
+                    canvas.set_draw_color(Color::RGB(0, 128, 0));
+                } else if tile.kind == TileType::Water {
+                    canvas.set_draw_color(Color::RGB(0, 0, 128));
+                }  else if tile.kind == TileType::Mountain {
+                    canvas.set_draw_color(Color::RGB(32, 32, 32));
+                }             
                 canvas.fill_rect(Rect::new((x * tile_size) as i32, (y * tile_size) as i32, tile_size, tile_size))?;
+
+
+                if tile.selected > 0 {
+                    canvas.set_draw_color(Color::RGB(255, 0, 0));
+                    canvas.fill_rect(Rect::from_center(Point::new((x * tile_size + tile_size / 2) as i32, (y * tile_size + tile_size / 2) as i32), (tile_size as f32 / 255 as f32 * tile.selected as f32) as u32, (tile_size as f32 / 255 as f32 * tile.selected as f32) as u32))?;
+                }
             }
         }
 
@@ -61,17 +76,34 @@ fn main() -> Result<(), String> {
         //canvas.fill_rect(Rect::from_center(Point::new(400, 300), 80, 80))?;
         //canvas.set_draw_color(Color::RGB(i, 64, 255 - i));
         //canvas.fill_rect(Rect::from_center(Point::new(400, 300), i as u32, i as u32))?;
-        //canvas.clear(); ?????????????????????????????
+        //canvas.clear(); 
         for event in event_pump.poll_iter() {
             match event {
                 Event::MouseMotion {x, y, ..} => {
                     mouse_pos.x = x as u32;
                     mouse_pos.y = y as u32;
-                    println!("x: {}, y: {}", x, y);
                 },
                 Event::Quit {..} |
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
                     break 'running;
+                },
+                Event::KeyDown { keycode: Some(Keycode::Left), repeat: false, .. } => {
+                    camera.offset.y -= 1;
+                },
+                Event::KeyDown { keycode: Some(Keycode::Right), repeat: false, .. } => {
+                    camera.offset.x += 1;
+                },
+                Event::KeyDown { keycode: Some(Keycode::Up), repeat: false, .. } => {
+                    camera.offset.y -= 1;
+                },
+                Event::KeyDown { keycode: Some(Keycode::Down), repeat: false, .. } => {
+                    camera.offset.y += 1;
+                },
+                Event::KeyDown { keycode: Some(Keycode::Plus), repeat: false, .. } => {
+                    camera.zoom_in();
+                },
+                Event::KeyDown { keycode: Some(Keycode::Minus), repeat: false, .. } => {
+                    camera.zoom_out();
                 },
                 _ => {}
             }
@@ -83,4 +115,27 @@ fn main() -> Result<(), String> {
     }
 
     Ok(())
+}
+
+pub struct Camera {
+    pub offset: Vec2i,
+    pub zoom: i8,    
+}
+
+impl Camera{
+    pub fn new() -> Self{
+        Self {offset: Vec2i::zero(), zoom: 1}
+    }
+
+    pub fn zoom_in(&mut self) {
+        if self.zoom < 4 {
+            self.zoom *= 2;
+        }
+    }
+
+    pub fn zoom_out(&mut self) {
+        if self.zoom > 1 {
+            self.zoom /= 2;
+        }
+    }
 }

@@ -9,20 +9,22 @@ pub struct World {
 
 impl World {
     pub fn new(size: Vec2u) -> Self {
-        Self {size, tiles: vec![Tile::Land; (size.x * size.y) as usize]}
+        Self {size, tiles: vec![Tile{selected: 0, kind: TileType::Water}; (size.x * size.y) as usize]}
     }
 
     pub fn p(&mut self) {
         let perlin = PerlinNoise::new();
-        let plus = 0.06;
+        let scale = 0.034;
         for x in 0..self.size.x {
             for y in 0..self.size.y {
-                let height = perlin.get2d([x as f64 + 0.74, y as f64 + 0.74]);
-                if height > 0.5 {
-                    self.set_tile(Vec2u::new(x, y), Tile::Water);
-                } else {
-                    self.set_tile(Vec2u::new(x, y), Tile::Land);
-                }
+                let height = perlin.get2d([x as f64 * scale + 0.74, y as f64 * scale + 0.32]);
+                if height < 0.45 {
+                    self.set_tile(Vec2u::new(x, y), Tile{selected: 0, kind: TileType::Water})
+                } else if height < 0.55 {
+                    self.set_tile(Vec2u::new(x, y), Tile{selected: 0, kind: TileType::Land});
+                } else if height < 0.65 {
+                    self.set_tile(Vec2u::new(x, y), Tile{selected: 0, kind: TileType::Mountain});
+                } 
             }
         }
     }
@@ -39,9 +41,17 @@ impl World {
 }
 
 
+
+#[derive(Clone, Copy)]
+pub struct Tile {
+    pub selected: u8,
+    pub kind: TileType
+}
+
+
 #[derive(Clone, Copy, PartialEq)]
-pub enum Tile {
+pub enum TileType {
     Land,
     Water,
-    Selected
+    Mountain
 }

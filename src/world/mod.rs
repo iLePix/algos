@@ -2,6 +2,8 @@ extern crate perlin_noise as perlin;
 use vecm::vec::*;
 use perlin::PerlinNoise;
 
+//pub mod celo;
+
 pub struct World {
     pub size: Vec2u,
     tiles: Vec<Tile>
@@ -20,11 +22,15 @@ impl World {
                 let height = perlin.get2d([x as f64 * scale + 0.74, y as f64 * scale + 0.32]);
                 if height < 0.45 {
                     self.set_tile(Vec2u::new(x, y), Tile{selected: 0, kind: TileType::Water})
+                } else if height < 0.5 {
+                    self.set_tile(Vec2u::new(x, y), Tile{selected: 0, kind: TileType::Sand});
                 } else if height < 0.55 {
                     self.set_tile(Vec2u::new(x, y), Tile{selected: 0, kind: TileType::Land});
-                } else if height < 0.65 {
+                } else if height < 0.58 {
                     self.set_tile(Vec2u::new(x, y), Tile{selected: 0, kind: TileType::Mountain});
-                } 
+                } else {
+                    self.set_tile(Vec2u::new(x, y), Tile{selected: 0, kind: TileType::Snow});
+                }
             }
         }
     }
@@ -41,7 +47,6 @@ impl World {
 }
 
 
-
 #[derive(Clone, Copy)]
 pub struct Tile {
     pub selected: u8,
@@ -53,5 +58,7 @@ pub struct Tile {
 pub enum TileType {
     Land,
     Water,
-    Mountain
+    Sand,
+    Mountain,
+    Snow
 }

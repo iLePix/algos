@@ -7,5 +7,5 @@ edition = "2021"
 
 [dependencies]
 sdl2 = "0.34.5"
-vecm = { git = "https://github.com/LinusDikomey/vecm" }
+vecm = {git = "https://github.com/LinusDikomey/vecm"}
 perlin_noise = "1.0.1"

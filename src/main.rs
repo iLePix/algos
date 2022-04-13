@@ -28,7 +28,7 @@ fn main() -> Result<(), String> {
     let mut canvas = window.into_canvas().build()
         .expect("could not make a canvas");
     
-    let world_size = Vec2u::new(320, 200);//Vec2u::new(80, 50);
+    let world_size = Vec2u::new(300, 300);//Vec2u::new(80, 50);
     let mut tile_size = 20; 
     let mut screen_size = Vec2u::new(1600, 1000);
     let mut camera = Camera::new();
@@ -48,7 +48,7 @@ fn main() -> Result<(), String> {
 
         //INPUTS
 
-        let offset_increment =  5;
+        const OFFSET_INCREMENT: i32 =  5;
         
         //canvas.fill_rect(Rect::from_center(Point::new(400, 300), 80, 80))?;
         //canvas.set_draw_color(Color::RGB(i, 64, 255 - i));
@@ -120,6 +120,18 @@ fn main() -> Result<(), String> {
         }
         if inputs.pressed(Control::ZoomIn) && tile_size < 20 {
             tile_size += 1;
+        }
+        if inputs.pressed(Control::Up) {
+            camera.offset.y += OFFSET_INCREMENT;
+        }
+        if inputs.pressed(Control::Down) {
+            camera.offset.y -= OFFSET_INCREMENT;
+        }
+        if inputs.pressed(Control::Left) {
+            camera.offset.x += OFFSET_INCREMENT;
+        }
+        if inputs.pressed(Control::Right) {
+            camera.offset.x -= OFFSET_INCREMENT;
         }
 
 
